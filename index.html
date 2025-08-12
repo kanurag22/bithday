@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy Birthday Meghna ❤️</title>
+<style>
+  html,body{height:100%;margin:0;font-family:system-ui,Segoe UI,Roboto,'Poppins',sans-serif}
+  body{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff9a9e,#fad0c4);overflow:hidden}
+  .center{width:92vw;max-width:720px;text-align:center;padding:28px;background:rgba(255,255,255,0.98);border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+  h1{color:#ff4d6d;margin:6px 0 10px;font-size:1.9rem}
+  p{color:#444;line-height:1.5}
+  .big-btn{margin:18px auto 6px;padding:14px 20px;border-radius:12px;background:#ff4d6d;color:#fff;border:0;font-size:1.05rem;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .popup{position:fixed;left:50%;top:45%;transform:translate(-50%,-50%) scale(.2);background:#fff;padding:20px 26px;border-radius:16px;box-shadow:0 14px 36px rgba(0,0,0,.25);color:#ff4d6d;font-size:1.3rem;opacity:0;z-index:40}
+  .popup.show{opacity:1;transform:translate(-50%,-50%) scale(1);transition:transform .42s cubic-bezier(.2,.9,.3,1),opacity .3s}
+  .card{opacity:0;transform:translateY(14px);transition:opacity .6s, transform .6s;z-index:10}
+  .card.show{opacity:1;transform:translateY(0)}
+  .heart{position:fixed;pointer-events:none;z-index:5;user-select:none}
+  .hint{font-size:.9rem;color:#666;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="center">
+  <h1>🎂 Happy Birthday, Meghna! ❤️</h1>
+  <button class="big-btn" id="startBtn">Start the Surprise</button>
+  <div class="hint">(Tap the button once — music + popup + hearts will play.)</div>
+
+  <div class="card" id="messageCard" aria-hidden="true" style="margin-top:18px">
+    <p id="mainMsg">
+You make my world brighter just by being in it.
+Every moment with you feels magical, and I’m so grateful to have you by my side.
+Today is all about you — your smile, your happiness, and the love we share.
+I love you endlessly. 💕
+    </p>
+  </div>
+</div>
+
+<div class="popup" id="popup">💖 Meghna, I Love You 💖</div>
+
+<script>
+/* Simple WebAudio Happy Birthday + popup flow.
+   This is intentionally minimal and only runs after user tap to avoid autoplay issues.
+*/
+
+let audioCtx, masterGain;
+
+function initAudio(){
+  if(audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.14;
+  masterGain.connect(audioCtx.destination);
+}
+
+/* short melody sequence: [freq, seconds] */
+const melody = [
+  [392,0.45],[392,0.45],[440,0.9],[392,0.9],[523.25,0.9],[493.88,1.2],
+  [392,0.45],[392,0.45],[440,0.9],[392,0.9],[587.33,0.9],[523.25,1.2],
+  [392,0.45],[392,0.45],[783.99,0.9],[659.25,0.9],[523.25,0.9],[493.88,0.9],[440,1.2],
+  [698.46,0.45],[698.46,0.45],[659.25,0.9],[523.25,0.9],[587.33,0.9],[523.25,1.4]
+];
+
+function playMelody(){
+  return new Promise((resolve)=>{
+    initAudio();
+    const now = audioCtx.currentTime + 0.05;
+    let t = now;
+    melody.forEach(([freq,dur],i)=>{
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(1.0, t + 0.01);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur - 0.02);
+      osc.connect(g); g.connect(masterGain);
+      osc.start(t); osc.stop(t + dur + 0.02);
+      t += dur;
+    });
+    const total = melody.reduce((s,n)=>s+n[1],0);
+    setTimeout(()=>resolve(), (total + 0.05)*1000);
+  });
+}
+
+/* create a floating heart at x,y with size */
+function createHeart(x = window.innerWidth/2, y = window.innerHeight/2, size = 18){
+  const d = document.createElement('div');
+  d.className = 'heart';
+  d.style.left = (x - size/2) + 'px';
+  d.style.top = (y - size/2) + 'px';
+  d.style.fontSize = size + 'px';
+  d.innerHTML = '❤️';
+  document.body.appendChild(d);
+  const dx = (Math.random()*200 - 100);
+  const dur = 2200 + Math.random()*1600;
+  d.animate([
+    { transform: 'translate(0,0) scale(.7)', opacity: 1 },
+    { transform: `translate(${dx}px, -${180 + Math.random()*300}px) scale(${1 + Math.random()})`, opacity: 0 }
+  ], { duration: dur, easing: 'cubic-bezier(.2,.9,.2,1)'});
+  setTimeout(()=>d.remove(), dur + 60);
+}
+
+/* explode hearts around center */
+function explode(count=20){
+  const cx = window.innerWidth/2, cy = window.innerHeight/2;
+  for(let i=0;i<count;i++){
+    const rx = cx + (Math.random()*160 - 80);
+    const ry = cy + (Math.random()*80 - 40);
+    createHeart(rx, ry, 12 + Math.random()*24);
+  }
+}
+
+/* main flow */
+const startBtn = document.getElementById('startBtn');
+const popup = document.getElementById('popup');
+const messageCard = document.getElementById('messageCard');
+
+async function runSequence(){
+  startBtn.disabled = true;
+  startBtn.innerText = 'Playing...';
+  try {
+    // resume audio context on gesture
+    initAudio();
+    if(audioCtx.state === 'suspended') await audioCtx.resume();
+    // 1) melody
+    await playMelody();
+    // 2) show popup
+    popup.classList.add('show');
+    // small click sound via oscillator
+    try{
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+      o.connect(g); g.connect(masterGain);
+      o.start(now); o.stop(now + 0.13);
+    }catch(e){}
+    // keep popup ~2.4s then explode
+    setTimeout(()=>{
+      popup.classList.remove('show');
+      explode(26);
+      // 3) reveal message
+      setTimeout(()=> {
+        messageCard.classList.add('show');
+        startBackgroundHearts();
+        startBtn.style.display = 'none';
+      }, 600);
+    }, 2400);
+  } catch(err){
+    console.error('error running sequence', err);
+    alert('Could not play audio — try a different browser (Chrome/Edge/Firefox/Safari).');
+    startBtn.disabled = false;
+    startBtn.innerText = 'Start the Surprise';
+  }
+}
+
+/* continuous background hearts after reveal */
+let bgTimer = null;
+function startBackgroundHearts(){
+  if(bgTimer) return;
+  bgTimer = setInterval(()=> createHeart(Math.random()*window.innerWidth, window.innerHeight - 10, 16 + Math.random()*18), 520);
+}
+
+/* start on button press */
+startBtn.addEventListener('click', runSequence);
+
+/* also let later taps create hearts for interaction */
+document.body.addEventListener('click', (e)=>{
+  if(e.target === startBtn) return;
+  if(window.getComputedStyle(startBtn).display === 'none'){
+    createHeart(e.clientX, e.clientY, 16 + Math.random()*18);
+  }
+});
+</script>
+</body>
+</html>
+
